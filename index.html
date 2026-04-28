@@ -1,0 +1,723 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Photonic Reservoir Computing as a Surrogate Dynamical Model for Hypersonic Vehicle Control: An Architectural Brief</title>
+<meta name="description" content="Technical brief: photonic reservoir computing as a certifiable fast surrogate within hypersonic GNC inner-loop control.">
+<meta name="author" content="Nils Haaland">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+    --color-bg: #fafaf7;
+    --color-bg-alt: #f3f3ee;
+    --color-ink: #1a1a1f;
+    --color-ink-soft: #45454d;
+    --color-ink-faint: #6f6f78;
+    --color-rule: #d8d8d2;
+    --color-rule-soft: #e8e8e3;
+    --color-accent: #1c3a5e;
+    --color-accent-soft: #2d5689;
+    --color-mark: #b8541f;
+    --font-display: 'Cormorant Garamond', 'Times New Roman', serif;
+    --font-body: 'IBM Plex Sans', system-ui, sans-serif;
+    --font-mono: 'IBM Plex Mono', 'Courier New', monospace;
+    --measure: 68ch;
+    --sidebar-width: 280px;
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+html {
+    scroll-behavior: smooth;
+    scroll-padding-top: 2rem;
+}
+
+body {
+    font-family: var(--font-body);
+    font-size: 16px;
+    line-height: 1.7;
+    color: var(--color-ink);
+    background: var(--color-bg);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+/* Layout */
+.layout {
+    display: grid;
+    grid-template-columns: var(--sidebar-width) minmax(0, 1fr);
+    max-width: 1400px;
+    margin: 0 auto;
+    min-height: 100vh;
+}
+
+/* Sidebar TOC */
+.sidebar {
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    overflow-y: auto;
+    padding: 3rem 1.5rem 3rem 2.5rem;
+    border-right: 1px solid var(--color-rule);
+    background: var(--color-bg-alt);
+}
+
+.sidebar-title {
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    color: var(--color-ink-faint);
+    margin-bottom: 1.25rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid var(--color-rule);
+}
+
+.sidebar-meta {
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    color: var(--color-ink-faint);
+    line-height: 1.7;
+    margin-bottom: 1.75rem;
+}
+
+.sidebar-meta div {
+    display: flex;
+    justify-content: space-between;
+    padding: 0.15rem 0;
+}
+
+.sidebar-meta .label {
+    color: var(--color-ink-faint);
+}
+
+.sidebar-meta .value {
+    color: var(--color-ink-soft);
+    font-weight: 500;
+}
+
+.toc-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.toc-list li {
+    margin-bottom: 0.4rem;
+}
+
+.toc-list a {
+    display: block;
+    text-decoration: none;
+    color: var(--color-ink-soft);
+    font-size: 0.78rem;
+    line-height: 1.45;
+    padding: 0.35rem 0.5rem 0.35rem 0.75rem;
+    border-left: 2px solid transparent;
+    transition: all 0.18s ease;
+}
+
+.toc-list a:hover {
+    color: var(--color-accent);
+    border-left-color: var(--color-accent-soft);
+    background: rgba(28, 58, 94, 0.04);
+}
+
+.toc-list a.active {
+    color: var(--color-accent);
+    border-left-color: var(--color-accent);
+    background: rgba(28, 58, 94, 0.06);
+    font-weight: 500;
+}
+
+.toc-num {
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    color: var(--color-ink-faint);
+    margin-right: 0.5rem;
+    font-weight: 500;
+}
+
+/* Main content */
+.main {
+    padding: 4rem 4rem 6rem 4rem;
+    max-width: calc(var(--measure) + 8rem);
+}
+
+.title-block {
+    margin-bottom: 3.5rem;
+    padding-bottom: 2.5rem;
+    border-bottom: 1px solid var(--color-rule);
+}
+
+h1 {
+    font-family: var(--font-display);
+    font-size: 2.4rem;
+    font-weight: 600;
+    line-height: 1.2;
+    color: var(--color-ink);
+    margin-bottom: 1.5rem;
+    letter-spacing: -0.01em;
+}
+
+.metadata {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 0.5rem 1.5rem;
+    font-family: var(--font-mono);
+    font-size: 0.78rem;
+    margin-top: 1.75rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--color-rule-soft);
+}
+
+.meta-item {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+}
+
+.meta-key {
+    color: var(--color-ink-faint);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-size: 0.68rem;
+}
+
+.meta-val {
+    color: var(--color-ink-soft);
+    font-weight: 500;
+}
+
+h2 {
+    font-family: var(--font-display);
+    font-size: 1.75rem;
+    font-weight: 600;
+    line-height: 1.25;
+    color: var(--color-ink);
+    margin-top: 4rem;
+    margin-bottom: 1.5rem;
+    letter-spacing: -0.005em;
+    padding-top: 1rem;
+}
+
+h2:first-of-type {
+    margin-top: 0;
+}
+
+p {
+    margin-bottom: 1.25rem;
+    max-width: var(--measure);
+    color: var(--color-ink);
+    font-size: 1rem;
+    line-height: 1.75;
+    text-wrap: pretty;
+}
+
+p strong {
+    font-weight: 600;
+    color: var(--color-ink);
+}
+
+p em {
+    font-style: italic;
+    color: var(--color-ink-soft);
+}
+
+a {
+    color: var(--color-accent);
+    text-decoration: none;
+    border-bottom: 1px solid var(--color-accent-soft);
+    transition: all 0.15s ease;
+}
+
+a:hover {
+    color: var(--color-mark);
+    border-bottom-color: var(--color-mark);
+}
+
+ul {
+    margin: 0 0 1.25rem 1.5rem;
+    max-width: var(--measure);
+}
+
+ul li {
+    margin-bottom: 0.5rem;
+    line-height: 1.7;
+}
+
+/* Tables */
+.table-wrap {
+    margin: 2rem 0;
+    overflow-x: auto;
+    border: 1px solid var(--color-rule);
+    background: white;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.92rem;
+}
+
+th {
+    background: var(--color-bg-alt);
+    text-align: left;
+    padding: 0.85rem 1rem;
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-weight: 600;
+    color: var(--color-ink-soft);
+    border-bottom: 2px solid var(--color-rule);
+}
+
+td {
+    padding: 0.85rem 1rem;
+    border-bottom: 1px solid var(--color-rule-soft);
+    line-height: 1.6;
+    vertical-align: top;
+}
+
+tr:last-child td {
+    border-bottom: none;
+}
+
+tr:hover td {
+    background: rgba(28, 58, 94, 0.025);
+}
+
+/* Footer */
+.footer {
+    margin-top: 5rem;
+    padding-top: 2rem;
+    border-top: 1px solid var(--color-rule);
+    font-family: var(--font-mono);
+    font-size: 0.78rem;
+    color: var(--color-ink-faint);
+    line-height: 1.7;
+    max-width: var(--measure);
+}
+
+.footer p {
+    font-size: 0.78rem;
+    color: var(--color-ink-faint);
+    margin-bottom: 0.5rem;
+    font-family: var(--font-mono);
+}
+
+.footer a {
+    color: var(--color-ink-soft);
+    border-bottom: 1px solid var(--color-rule);
+}
+
+.footer a:hover {
+    color: var(--color-accent);
+    border-bottom-color: var(--color-accent-soft);
+}
+
+/* Section dividers - styled with first paragraph of each H2 */
+section {
+    margin-bottom: 2rem;
+}
+
+/* Mobile */
+@media (max-width: 900px) {
+    .layout {
+        grid-template-columns: 1fr;
+    }
+    .sidebar {
+        position: relative;
+        height: auto;
+        max-height: none;
+        padding: 1.5rem 1.5rem 2rem 1.5rem;
+        border-right: none;
+        border-bottom: 1px solid var(--color-rule);
+    }
+    .toc-list {
+        column-count: 2;
+        column-gap: 1.5rem;
+    }
+    .toc-list li {
+        break-inside: avoid;
+    }
+    .main {
+        padding: 2.5rem 1.5rem 4rem 1.5rem;
+    }
+    h1 {
+        font-size: 1.85rem;
+    }
+    h2 {
+        font-size: 1.45rem;
+        margin-top: 3rem;
+    }
+}
+
+@media (max-width: 600px) {
+    .toc-list {
+        column-count: 1;
+    }
+    .metadata {
+        grid-template-columns: 1fr 1fr;
+    }
+}
+
+/* Print */
+@media print {
+    .sidebar, .footer {
+        display: none;
+    }
+    .layout {
+        display: block;
+    }
+    .main {
+        padding: 0;
+        max-width: 100%;
+    }
+    body {
+        background: white;
+        color: black;
+        font-size: 11pt;
+    }
+    h1 {
+        font-size: 18pt;
+        page-break-after: avoid;
+    }
+    h2 {
+        font-size: 14pt;
+        page-break-after: avoid;
+        margin-top: 1.5rem;
+    }
+    p {
+        orphans: 3;
+        widows: 3;
+        max-width: 100%;
+    }
+    a {
+        color: black;
+        border-bottom: none;
+    }
+    a[href^="http"]:after {
+        content: " [" attr(href) "]";
+        font-size: 8pt;
+        color: #666;
+    }
+    .table-wrap {
+        page-break-inside: avoid;
+    }
+    .title-block {
+        page-break-after: avoid;
+    }
+}
+</style>
+</head>
+<body>
+<div class="layout">
+<aside class="sidebar">
+<div class="sidebar-title">Contents</div>
+<div class="sidebar-meta">
+<div><span class="label">Version</span><span class="value">v4.0</span></div>
+<div><span class="label">Words</span><span class="value">~6,800</span></div>
+<div><span class="label">Reading</span><span class="value">~28 min</span></div>
+<div><span class="label">Updated</span><span class="value">Apr 2026</span></div>
+</div>
+<ul class="toc-list">
+<li><a href="#abstract" data-section="abstract">Abstract</a></li>
+<li><a href="#1-the-hypersonic-gnc-problem" data-section="1-the-hypersonic-gnc-problem"><span class="toc-num">1</span>The Hypersonic GNC Problem</a></li>
+<li><a href="#2-the-architectural-proposal-prc-as-mpc-surrogate-within-ps2f" data-section="2-the-architectural-proposal-prc-as-mpc-surrogate-within-ps2f"><span class="toc-num">2</span>The Architectural Proposal: PRC as MPC Surrogate Within PS2F</a></li>
+<li><a href="#3-why-photonic-implementation-specifically" data-section="3-why-photonic-implementation-specifically"><span class="toc-num">3</span>Why Photonic Implementation, Specifically</a></li>
+<li><a href="#4-stability-certification-and-failure-modes" data-section="4-stability-certification-and-failure-modes"><span class="toc-num">4</span>Stability, Certification, and Failure Modes</a></li>
+<li><a href="#5-training-pipeline-and-the-sim-to-real-question" data-section="5-training-pipeline-and-the-sim-to-real-question"><span class="toc-num">5</span>Training Pipeline and the Sim-to-Real Question</a></li>
+<li><a href="#6-architectural-choices-within-photonic-reservoir-computing" data-section="6-architectural-choices-within-photonic-reservoir-computing"><span class="toc-num">6</span>Architectural Choices Within Photonic Reservoir Computing</a></li>
+<li><a href="#7-the-betsy-architecture-as-one-design-point" data-section="7-the-betsy-architecture-as-one-design-point"><span class="toc-num">7</span>The Betsy Architecture as One Design Point</a></li>
+<li><a href="#8-international-research-landscape" data-section="8-international-research-landscape"><span class="toc-num">8</span>International Research Landscape</a></li>
+<li><a href="#9-trl-assessment-and-demonstration-pathway" data-section="9-trl-assessment-and-demonstration-pathway"><span class="toc-num">9</span>TRL Assessment and Demonstration Pathway</a></li>
+<li><a href="#10-key-open-research-questions" data-section="10-key-open-research-questions"><span class="toc-num">10</span>Key Open Research Questions</a></li>
+<li><a href="#11-what-this-brief-argues-and-does-not-argue" data-section="11-what-this-brief-argues-and-does-not-argue"><span class="toc-num">11</span>What This Brief Argues and Does Not Argue</a></li>
+<li><a href="#12-recommendation" data-section="12-recommendation"><span class="toc-num">12</span>Recommendation</a></li>
+<li><a href="#acknowledgments" data-section="acknowledgments">Acknowledgments</a></li>
+<li><a href="#references" data-section="references">References</a></li>
+</ul>
+</aside>
+<main class="main">
+<div class="title-block">
+<h1>Photonic Reservoir Computing as a Surrogate Dynamical Model for Hypersonic Vehicle Control: An Architectural Brief</h1>
+<div class="metadata">
+<div class="meta-item"><span class="meta-key">Author</span><span class="meta-val">Nils Haaland</span></div>
+<div class="meta-item"><span class="meta-key">Affiliation</span><span class="meta-val">Independent</span></div>
+<div class="meta-item"><span class="meta-key">Date</span><span class="meta-val">April 2026</span></div>
+<div class="meta-item"><span class="meta-key">Status</span><span class="meta-val">Working draft v4.0</span></div>
+<div class="meta-item"><span class="meta-key">License</span><span class="meta-val">CC BY 4.0</span></div>
+</div>
+</div>
+<section id="abstract">
+<h2>Abstract</h2>
+<p>This brief argues that photonic reservoir computing (PRC) is a credible candidate for a specific role within hypersonic GNC: a fast surrogate dynamical model embedded within a Predictive Safety-Stability Filter (PS2F) architecture, where classical model predictive control retains certified authority and the photonic reservoir provides the high-bandwidth, low-latency dynamical surrogate that makes inner-loop MPC tractable on hypersonic timescales.</p>
+<p>The argument builds on recent demonstrations — photonic RC integration with flight control (Ma et al. 2026, deep PRC + feedforward compensator on UAV platforms) and the formal PS2F framework (Yan et al. 2026) — proposing their combination and extension to the hypersonic regime as a defined research program. The brief addresses stability, certification, training pipeline, environmental robustness, and supply-chain considerations that distinguish hypersonic application from prior demonstrations. A specific architectural instantiation, the Betsy plano-hemispherical optical reservoir, is discussed briefly as one design point among candidate substrates. The brief closes with a TRL assessment, key open research questions, an explicit scope statement, and a proposed demonstration sequence.</p>
+</section>
+<section id="1-the-hypersonic-gnc-problem">
+<h2><span class="toc-num">1.</span> The Hypersonic GNC Problem</h2>
+<p>Hypersonic flight in the Mach 5–20 regime produces four control challenges that compound:</p>
+<p><strong>Sensor degradation under aerothermal loading.</strong> Air data sensors — pitot, altimeter, angle-of-attack vanes — degrade severely under hypersonic heating. Recent literature on hypersonic flight control explicitly avoids using measured flight path angle and angle of attack, instead estimating these from velocity and altitude through high-order differentiators or disturbance observers. This is a structural limitation, not an engineering inadequacy: the sensors that work at subsonic speeds cannot be made reliable at Mach 10. Control architectures must reconstruct vehicle state from a degraded and partially failing sensor suite.</p>
+<p><strong>Dynamics that resist real-time modeling.</strong> Boundary-layer transition, shock-shock interaction, ablation-induced geometry changes, and propellant-airframe coupling shift the effective vehicle dynamics during flight. Model-predictive control approaches require a forward model. The model is the hard part — and a model that is accurate in cruise may be wrong in a transition regime, with the error growing fastest precisely when control authority is most critical.</p>
+<p><strong>Environmental hostility.</strong> Vehicle skin and leading-edge surface temperatures in the Mach 5–20 regime exceed 1500 K; forward-mounted optical sensors and any photonic device operating close to the airframe surface face thermal environments well above what silicon electronics tolerate. Avionics bay temperatures are managed below this through thermal protection, but the margin is much tighter than at subsonic speeds, and the mass cost of that thermal protection is itself a constraint. Plasma sheaths produce time-varying electromagnetic shielding that disrupts both communications and conventional EMI rejection. Conventional silicon electronics require active thermal management and EMI shielding that compete with vehicle mass and volume budgets.</p>
+<p><strong>Control loop bandwidth versus actuator dynamics.</strong> Hypersonic flight control loop bandwidth is constrained more by actuator dynamics, structural modes, and sensor degradation than by compute throughput. Inner-loop bandwidth in published hypersonic GNC work is typically in the 10–100 Hz range, not the 10 kHz range that pure compute-speed arguments might suggest. This is important context: the dominant problem is not &quot;how fast can we compute&quot; but &quot;how do we control a vehicle whose dynamics shift faster than we can reliably model them.&quot;</p>
+<p>The dominant response to these constraints has been engineered conservatism — simplify the control law, restrict the trajectory envelope, accept margin loss. This is correct engineering given current computational primitives. The question this brief poses is whether a specific class of computational primitive — physical reservoir computing implemented in the optical domain — can relax one specific constraint within this set: the speed and accuracy of the <em>dynamical surrogate model</em> that model-predictive control depends on.</p>
+</section>
+<section id="2-the-architectural-proposal-prc-as-mpc-surrogate-within-ps2f">
+<h2><span class="toc-num">2.</span> The Architectural Proposal: PRC as MPC Surrogate Within PS2F</h2>
+<p>The proposal of this brief is structurally specific. It is not that photonic reservoir computing should serve as a flight controller. It is that PRC can serve as the <em>fast dynamical surrogate model</em> required by model predictive control, operating within an architecture that retains classical safety and stability guarantees through a separate, certified control layer.</p>
+<p>The relevant framework is the Predictive Safety-Stability Filter (PS2F), formalized in March 2026 by Yan, Tao, Su, Liu, and Li (UCL, Southeast University, and Loughborough University). PS2F places a classical nominal MPC controller in series with an external command source. The classical MPC&#x27;s value function serves as a Lyapunov function, providing formal stability and safety guarantees. The external command — which in the original PS2F formulation may come from a learned policy, human teleoperation, or any goal-oriented planner — is then reconciled against this safety-stability envelope through a second optimization that finds the achievable command closest to the external input while remaining within the provably safe region.</p>
+<p>In the architecture proposed here, the photonic reservoir computer occupies two complementary roles within this framework:</p>
+<p><em>As surrogate model for the nominal MPC.</em> Williams, Kutz, and Manohar (2024) demonstrated that echo state networks — the algorithmic class to which RC belongs — are particularly suitable surrogate models for MPC, offering reductions in computational complexity, longer valid prediction times, and reduced cost on the MPC objective function compared to LSTM, GRU, or fully-connected network baselines. Implementing this surrogate in photonics rather than digital electronics provides the speed and energy efficiency advantages that make MPC tractable on hypersonic timescales — not because compute is the bottleneck, but because evaluating the surrogate quickly enough at the resolution MPC requires has historically been the bottleneck on tight inner loops.</p>
+<p><em>As external command generator (the &quot;augmented stability derivative&quot; channel).</em> The PRC, trained on flight envelope data and adapting via readout retraining, generates a high-bandwidth feedforward command that captures dynamical features not represented in the simplified MPC model. This is structurally similar to the role demonstrated by Ma et al. (2026), in which a deep photonic reservoir computer provided feedforward compensation for unmodeled UAV dynamics in confined environments, achieving residual-force prediction accuracy matching or exceeding MLP and TCN baselines while reducing training time from hours to milliseconds. Their work is the first published integration of hardware-implemented PRC with flight control known to this author and represents the proof-of-concept that motivates extending the approach to hypersonic application.</p>
+<p>The combined architecture preserves three properties that hypersonic GNC requires:</p>
+<p>The classical MPC layer provides Lyapunov stability and constraint satisfaction guarantees. These are formal, certifiable properties not dependent on the PRC&#x27;s correct operation.</p>
+<p>The PRC contributes performance — better tracking under unmodeled dynamics, faster adaptation to regime shifts, and a richer dynamical surrogate than analytical models can provide — within bounds enforced by the classical layer.</p>
+<p>When the PRC fails, malfunctions, or encounters out-of-distribution inputs, the PS2F framework degrades to nominal MPC operation. The vehicle does not lose stability; it loses the performance enhancement the PRC was providing. This is a graceful degradation property aligned with aerospace fault-tolerance requirements.</p>
+</section>
+<section id="3-why-photonic-implementation-specifically">
+<h2><span class="toc-num">3.</span> Why Photonic Implementation, Specifically</h2>
+<p>A reservoir is substrate-agnostic in principle. RC has been demonstrated in electronic, mechanical, fluidic, biological, and photonic media. The choice of photonic implementation for the hypersonic GNC application is not arbitrary; it follows from substrate-level properties that align with specific constraints of the hypersonic environment.</p>
+<p><strong>Native compatibility with optical sensor signals.</strong> Fiber-optic strain sensors, optical pyrometers, and emerging photonic pressure transducers produce optical signals natively. A photonic reservoir can ingest these signals without analog-to-digital conversion, eliminating the ADC bottleneck and the associated power, quantization, and EMI vulnerability costs. This is an architectural simplification more than an efficiency improvement.</p>
+<p><strong>EMI immunity at the substrate level.</strong> Optical signal paths and photonic processing elements are immune to the time-varying electromagnetic environment of plasma sheath and stage-separation transients. This requires no shielding overhead.</p>
+<p><strong>Substrate-dependent thermal robustness.</strong> Silicon photonic platforms have non-trivial thermo-optic coefficients — the silicon thermo-optic coefficient is approximately 1.8 × 10⁻⁴ K⁻¹, meaning a 100 K shift changes the refractive index by roughly 1.8% and detunes resonance frequencies by tens of GHz in typical resonator designs. Active stabilization through integrated heaters is the standard mitigation, but it consumes power and adds complexity exactly opposite the SWaP-C direction the application requires. Diamond&#x27;s thermo-optic coefficient is roughly an order of magnitude smaller, sapphire&#x27;s smaller still. In a hypersonic vehicle skin environment with substantial thermal gradients, this coefficient difference is consequential — though not by itself sufficient. For high-Q cavity devices, even a modest residual thermal drift detunes narrow linewidths; thermal robustness in such designs depends on the joint optimization of substrate properties, cavity Q, and operating-point margins. Wide-bandgap optical materials also maintain optical performance at temperatures that destroy silicon electronics. The choice of substrate determines whether the device is a mission-system component or a thermally-managed payload, but the resonator design must still be matched to the thermal operating envelope.</p>
+<p><strong>Energy budget at GHz throughput.</strong> Recent silicon photonic RC implementations have demonstrated picojoule-per-operation energy efficiencies at GHz-class throughput, with the Aadhi et al. (2026) work achieving 20 TOPS at 4.4 fJ per operation and the Wang et al. (2024) work achieving 200 TOPS with energy efficiency two orders of magnitude beyond GPUs. The energy efficiency is consequential under the SWaP-C constraints typical of airborne and spaceborne systems.</p>
+<p><strong>Latency at the surrogate evaluation.</strong> This is the substrate-level property most directly relevant to the PS2F architecture. MPC requires evaluating the surrogate model and its sensitivities at the planning horizon resolution. Real solvers — sequential quadratic programming, interior-point methods — exploit problem structure to reuse Jacobians and avoid full forward simulations at every iteration, so naive arithmetic of &quot;horizon length times iterations&quot; overstates the actual evaluation count. The honest claim is narrower: surrogate evaluation cost shapes the achievable combination of horizon length, prediction resolution, and update rate. With digital nonlinear surrogates evaluating in microseconds-to-milliseconds per call, hypersonic inner-loop MPC at the regimes published in the recent literature requires careful trade-offs across these three axes. With photonic surrogate evaluation in the nanoseconds regime — which the recent silicon photonic RC implementations support at GHz throughput — those trade-offs become less binding, allowing MPC formulations that retain prediction richness without sacrificing update rate. The advantage is real but conditional: the achievable end-to-end latency depends on readout architecture (Section 6) and on whether the surrogate&#x27;s I/O bandwidth matches the controller&#x27;s needs. The argument is for a relaxation of one specific constraint, not for an order-of-magnitude headline improvement.</p>
+<p>The argument is not that photonic computing is universally superior to digital electronic computation. It is that for the specific role of surrogate dynamical model within a PS2F-architected hypersonic GNC stack, the substrate-level properties of photonic computing align with the application constraints in ways that digital electronic implementations do not — particularly when the device must operate close to the airframe under thermal and electromagnetic conditions hostile to silicon.</p>
+</section>
+<section id="4-stability-certification-and-failure-modes">
+<h2><span class="toc-num">4.</span> Stability, Certification, and Failure Modes</h2>
+<p>Hypersonic GNC is not limited by raw compute throughput but by the requirement that the control architecture be certifiable, stable under disturbance, and graceful in failure. These are non-negotiable requirements, and any computational primitive proposed for this application must address them explicitly.</p>
+<p><strong>Stability framework.</strong> The PS2F architecture provides the stability guarantee. The nominal MPC layer&#x27;s value function serves as a Lyapunov function for the constrained nonlinear system; stability is proven for the MPC layer through standard receding-horizon control theory. The PRC&#x27;s contribution sits within bounds enforced by the MPC&#x27;s safety-stability envelope. The system remains stable under PRC failure or out-of-distribution input because the classical layer enforces the envelope regardless of PRC behavior.</p>
+<p>For the PRC itself, the relevant stability concept is the Echo State Property (ESP), which has been formalized through several frameworks: the spectral radius condition for echo state networks (Jaeger), local Lyapunov exponent analysis (Wainrib and Galtier; Gallicchio), and conditional Lyapunov exponent characterization through generalized synchronization. Recent work — including the Edge-of-Stability Echo State Network (ES²N) and memory-loss-based stability characterizations — provides progressively tighter operational tools for verifying that a given reservoir implementation satisfies ESP. These tools are not specific to photonic implementations; they apply to any RC instantiation.</p>
+<p><strong>Certification framework.</strong> Aerospace ML certification is governed in the U.S. context primarily by DO-178C (software), DO-254 (hardware), and emerging AI-specific guidance from EASA (the W-shape model) and SAE/EUROCAE working groups. Current consensus practice, articulated across recent industry analyses and standards-body activity: ML systems can currently be certified at Design Assurance Level D for non-critical functions; certification at higher DAL levels (A, B, C) is approached through partitioned architectures where deterministic systems oversee ML components, restrict their authority, and provide override capability. Post-certification retraining of the primary ML function is currently not approved.</p>
+<p>The PS2F architecture offers a plausible path within this constraint. The classical MPC layer would be implemented in deterministic certified software/hardware, providing the safety envelope and retaining override authority. The PRC would operate as an authority-restricted external command source. Readout layer adaptation, if performed in flight, would occur only within bounds enforced by the safety layer — which itself does not retrain. The certification path being argued for here is: classical MPC at DAL-A or DAL-B with full V&amp;V, PRC at DAL-C or DAL-D as authority-restricted advisory component. No precedent exists yet for this specific architecture in primary flight authority; the argument is that the structure is consistent with current industry-consensus partitioning practice and that a specific certification campaign could plausibly succeed, not that the path is established.</p>
+<p>This is not a complete solution. Certification of the PRC component, even at restricted DAL, requires demonstrating: data management for training, learning process verification, inference model verification, behavior boundedness under the operational design domain, and traceability. These are real engineering tasks. They are not, however, novel barriers — they are the same tasks faced by any aerospace ML certification effort, increasingly well-mapped through ongoing standards work (EUROCAE WG-114, SAE G-34).</p>
+<p><strong>Failure mode taxonomy.</strong> The PRC component can fail in several distinct modes, each requiring a specific detection and response:</p>
+<p><em>Reservoir geometric perturbation.</em> For substrate implementations sensitive to mechanical deformation — including, notably, cavity-based architectures under sustained g-loading or vibration — the reservoir mapping itself can shift. The literature on photonic packaging confirms that vibration disturbances degrade optical coupling performance, and thermal sensitivity of alignment is a known issue in production photonic devices. Detection: continuous injection of a low-amplitude pseudo-random test signal in a frequency band orthogonal to the control-relevant input bandwidth — for a 100 Hz inner loop, the test signal lives above approximately 500 Hz where it cannot affect the control output. Cross-correlation of the reservoir&#x27;s response to this test signal against a stored baseline impulse response provides a continuously updated estimate of the reservoir&#x27;s transfer characteristics. This out-of-band probing is necessary but not sufficient: a broadband-nonlinear reservoir can drift in its in-band response while the out-of-band test signal returns nominal results. Periodic in-band probing — using brief, low-amplitude perturbations during low-demand operating regimes — is required to fully characterize health, accepting the small disturbance cost. Significant deviation in either probe regime triggers progressive authority reduction. Response: confidence-weighted reduction of PRC contribution to the MPC external command, ultimately falling back to nominal MPC operation if drift exceeds bounds.</p>
+<p><em>Out-of-distribution input.</em> If vehicle state moves outside the operational design domain represented in training data, the PRC&#x27;s output is unreliable. Detection: novelty detection on input distribution; explicit flagging of regimes outside training envelope. Response: PS2F naturally handles this through the safety filter — the classical MPC layer enforces bounds regardless of PRC output quality.</p>
+<p><em>Hardware failure.</em> Loss of laser source, photodetector failure, fiber damage. Detection: continuous monitoring of optical power levels and reservoir output characteristics. Response: PRC disengagement, fallback to nominal MPC.</p>
+<p><em>Readout drift under in-flight adaptation.</em> If the readout layer adapts incorrectly — through corrupted reference signal, sensor failure feeding bad training labels, or numerical instability in the adaptation algorithm — the readout could converge to a degenerate state. Detection: continuous validation of readout against held-out reference signals from sensors not used in adaptation. Response: revert readout to last known good state; flag for ground analysis.</p>
+<p>The pattern across all failure modes: graceful degradation to nominal MPC operation. The PRC contributes performance when working correctly, contributes nothing harmful when failing, and the classical safety layer provides the stability guarantee throughout.</p>
+</section>
+<section id="5-training-pipeline-and-the-sim-to-real-question">
+<h2><span class="toc-num">5.</span> Training Pipeline and the Sim-to-Real Question</h2>
+<p>The PRC&#x27;s value depends on being trained on data representative of the flight envelope. For hypersonic application, generating this training data is itself a non-trivial research question that the architectural proposal must address.</p>
+<p><strong>Data sources and their limitations.</strong> Pre-flight training data for hypersonic GNC comes from several sources, each with characteristic limitations:</p>
+<p><em>CFD simulation</em> provides large quantities of data across arbitrary regimes but carries known biases at hypersonic Mach numbers, particularly in turbulence modeling, transition prediction, and ablation coupling. CFD data is necessary but not sufficient.</p>
+<p><em>Wind tunnel testing</em> provides experimentally grounded data but is limited to specific Mach ranges, scaling effects, and test durations measured in tens of milliseconds. Wind tunnel data is high-quality but sparse.</p>
+<p><em>Sub-scale flight tests and sounding rocket data</em> provide partial flight-realistic data at lower Mach numbers or shorter durations than the operational envelope.</p>
+<p><em>Operational flight data</em> from previous vehicles in the same class is rare, often classified, and subject to vehicle-specific differences that limit generalization.</p>
+<p>The training distribution available pre-flight is therefore necessarily incomplete relative to the operational envelope. This is not a flaw of photonic RC specifically; it is a fundamental constraint of hypersonic flight system development.</p>
+<p>A plausible pipeline that combines these sources: bulk training data is generated via high-fidelity CFD (representative solvers include US3D, OVERFLOW, and equivalent) covering the parametric flight envelope with deliberate domain randomization across uncertain parameters — particularly transition models, ablation rates, and atmospheric variability. The CFD-trained reservoir readout is then refined against sparse wind-tunnel data through Bayesian transfer learning, where the CFD-derived readout serves as the prior and wind-tunnel observations update the posterior with appropriate uncertainty quantification. Sub-scale flight data, where available, provides a further refinement stage operating on the full sensor suite. The result is a readout layer whose performance is anchored to physical experiment in the regimes wind-tunnel and sub-scale flight data exist, with controlled uncertainty bounds as conditions extrapolate beyond those regimes. The PS2F safety filter handles the consequences of those bounds being exceeded in operation. None of this is novel in concept; the contribution would be applying it to a photonic readout with hardware-specific calibration steps.</p>
+<p><strong>Implications for architecture.</strong> The PS2F framework provides the answer to the sim-to-real question in a structurally clean way: the PRC operates within bounds enforced by the classical MPC. Out-of-distribution conditions trigger PRC disengagement, not vehicle instability. The PRC&#x27;s contribution is performance in regimes well-represented in training; the safety guarantee does not depend on training distribution coverage.</p>
+<p>In-flight readout adaptation, where employed, addresses a narrower question: incremental adaptation to vehicle-specific characteristics within the operational envelope (mass distribution as fuel burns, surface degradation through ablation, sensor drift). This is supervisable — the supervisory signal can be derived from sensors not used in PRC input, or from comparison with the nominal MPC&#x27;s predictions. Adaptation outside the supervisable envelope is not attempted.</p>
+<p><strong>Honest acknowledgment of remaining gaps.</strong> Rare-event extrapolation — the regime where vehicle dynamics enter states not represented in any training source — remains an open research question for any learning-based approach, photonic or otherwise. The PS2F architecture handles this through the classical safety layer, which constrains vehicle behavior to its provably safe envelope regardless of PRC predictions. This is sufficient for safety. It is not sufficient for performance enhancement in those rare regimes; the PRC&#x27;s contribution becomes nil during true off-distribution events. Whether this performance loss is acceptable depends on mission requirements and is a system-engineering decision rather than a technology question.</p>
+</section>
+<section id="6-architectural-choices-within-photonic-reservoir-computing">
+<h2><span class="toc-num">6.</span> Architectural Choices Within Photonic Reservoir Computing</h2>
+<p>Photonic reservoir computing is a class of architectures, not a single device. Within the class, several axes drive application fit for hypersonic GNC:</p>
+<p><strong>Time-multiplexed vs. spatial reservoirs.</strong> Time-delay architectures (single nonlinear element with feedback loop, virtual nodes corresponding to time slots) are simpler to fabricate and dominate published demonstrations. Spatial architectures (distributed physical nodes in 2D or 3D geometry) offer parallel throughput at the cost of fabrication complexity. The Wang et al. 200 TOPS silicon photonic RC engine and the Aadhi et al. NALM-based reconfigurable PRC demonstrate that spatial architectures can be made compact and fabrication-tolerant on silicon. For hypersonic application, both approaches are candidates.</p>
+<p><strong>Network-of-nodes vs. continuous-medium reservoirs.</strong> Most published photonic RC architectures construct the reservoir as a network of discrete nonlinear elements — semiconductor optical amplifiers, microring resonators, MZMs — coupled through waveguides. An alternative, less explored, is to use the dynamics of light propagation in a continuous medium (cavity, fiber, scattering volume) as the reservoir itself. The continuous-medium approach can in principle exploit mode structure to produce richness without explicit node-by-node fabrication. This is the architectural axis on which the Betsy concept sits.</p>
+<p><strong>Substrate.</strong> Silicon photonics offers the most mature fabrication ecosystem and lowest per-device cost at scale. Wide-bandgap substrates (silicon carbide, diamond, sapphire) offer superior thermal and radiation performance at the cost of fabrication maturity. For application targets where the operating environment exceeds silicon&#x27;s substrate limits, wide-bandgap substrates become structurally necessary rather than preferable.</p>
+<p><strong>Readout architecture.</strong> All-optical readout (active research front, with recent imec work being notable) eliminates the optical-to-electronic conversion at the reservoir output, preserving the latency advantage end-to-end. Hybrid optical-electronic readout is more mature but introduces an electronic processing stage. The honest trade-off: even if the optical reservoir core evaluates in 10 ns, a 12-bit ADC at 1 MSps adds approximately 1 μs of latency, and digital readout computation adds further microseconds. End-to-end latency in a hybrid architecture can be 10× to 100× the optical core&#x27;s evaluation time. For the PS2F architecture&#x27;s MPC surrogate role, hybrid readout is acceptable as a near-term implementation — the resulting tens-of-microseconds end-to-end latency is still small relative to a 10 ms control window. All-optical readout, integrated photodetector arrays with parallel comparators, or analog crossbar-based readout would extend the latency advantage to the longer-horizon goal. The architectural choice determines where in the latency budget the photonic advantage compounds and where it is amortized away.</p>
+<p><strong>Comparison to non-photonic alternatives.</strong> Photonic RC is one of several candidate analog computing primitives for the surrogate role. Memristor-crossbar in-memory computing offers comparable analog throughput at lower fabrication cost on existing CMOS lines but suffers from finite write-cycle endurance, thermal drift, and electronic-substrate EMI exposure. FPGA-accelerated echo state networks are flexible and have an established certification path but retain the ADC bottleneck on optical sensor inputs and the EMI exposure of any electronic implementation. Analog neuromorphic chips (Loihi-class, BrainScaleS-class) offer event-driven energy efficiency but have not been demonstrated for continuous-time dynamical surrogate roles. The case for photonic implementation is not that other approaches cannot work; it is that photonics uniquely combines optical I/O compatibility, intrinsic EMI immunity, and thermal robustness on wide-bandgap substrates — properties aligned with the hypersonic application&#x27;s specific constraints. For applications without those constraints, alternative substrates may be equally good or better.</p>
+<p>A photonic RC device suited to hypersonic application is one with: spatial or continuous-medium architecture for parallel throughput at the surrogate evaluation rate, a wide-bandgap substrate for thermal robustness, and a path to all-optical or near-optical readout for end-to-end latency. Devices satisfying all three axes do not currently exist as commercial products. The question is whether they can be built.</p>
+</section>
+<section id="7-the-betsy-architecture-as-one-design-point">
+<h2><span class="toc-num">7.</span> The Betsy Architecture as One Design Point</h2>
+<p>The Betsy plano-hemispherical optical reservoir is one candidate design point in the architectural space identified above — one specific instantiation of the broader PRC class, not the only or best candidate for hypersonic application. The case for the broader argument of this brief does not depend on Betsy specifically.</p>
+<p>Betsy uses a CVD diamond hemisphere bonded to a gold-coated planar base, forming a plano-hemispherical optical cavity at 1550 nm. The diamond provides wide-bandgap optical transparency, exceptional thermal conductivity (~2000 W/m·K, approximately five times copper), and radiation hardness. A graphene honeycomb pattern (~32% coverage) on the inner hemispherical surface provides the nonlinear interaction. Deliberately placed dielectric scatterers tune the cavity into a Berry-Robnik mixed-phase-space regime — a classical optical configuration in which regular and chaotic ray dynamics coexist, producing a reservoir whose richness derives from cavity geometry rather than from a network of discrete nonlinear nodes. Readout occurs through evanescent leakage at the cavity rim into a thin skin layer.</p>
+<p>The design is at TRL 2 (technology concept formulated, with analytical and laboratory simulation underway). The critical near-term milestone is a MEEP electromagnetic simulation that will determine whether the predicted mixed-phase-space dynamics produce a measurable richness advantage over conventional photonic reservoir architectures. The success criteria for this simulation, sharpened from earlier formulations:</p>
+<p><em>Memory capacity (MC).</em> The Betsy reservoir&#x27;s memory capacity, computed via the standard linear-task MC measure, must equal or exceed that of network-of-nodes baseline reservoirs of comparable physical scale.</p>
+<p><em>Nonlinear kernel rank.</em> The effective dimensionality of the nonlinear feature embedding produced by the cavity must be quantitatively comparable to or better than baseline architectures, measured through standard kernel-rank techniques.</p>
+<p><em>Lyapunov exponent spectrum.</em> The reservoir&#x27;s local Lyapunov spectrum must demonstrate the desired edge-of-stability behavior — sufficient richness for computation, sufficient contraction for the echo state property.</p>
+<p><em>Task-relevant performance.</em> On a defined surrogate-modeling benchmark (proposed: chaotic system identification on Lorenz-96 or Kuramoto-Sivashinsky dynamics, both standard RC benchmarks with established baselines), the Betsy architecture must produce surrogate model accuracy and prediction horizon at least competitive with published baselines.</p>
+<p>If the simulation fails to demonstrate these properties, the architecture&#x27;s distinguishing claim is falsified, and Betsy reduces to a thermally robust but otherwise unremarkable cavity device — at which point silicon carbide microresonator arrays or sapphire-substrate alternatives become better candidates for the broader argument of this brief. The kill condition is clear and predetermined.</p>
+<p>The engineering path beyond simulation faces a specific supply chain consideration: optical-grade polishing of curved CVD diamond surfaces is a specialist capability with limited commercial availability. This is acknowledged as a programmatic risk. Alternative wide-bandgap substrate paths — silicon carbide microresonator arrays, sapphire whispering-gallery-mode devices, single-crystal diamond planar photonics — should be developed in parallel as Plan B options. The argument of this brief is not specifically about diamond; it is about wide-bandgap photonic reservoir computing in PS2F-architected hypersonic GNC.</p>
+</section>
+<section id="8-international-research-landscape">
+<h2><span class="toc-num">8.</span> International Research Landscape</h2>
+<p>Photonic reservoir computing for flight control has moved from theoretical possibility to early demonstration during the period this brief has been in development. Several research groups, distributed internationally, are converging on closely related approaches.</p>
+<p>Ma et al. (April 2026, arXiv 2604.10262), based in Shanghai and funded by the National Natural Science Foundation of China and Shanghai Municipal Science and Technology Commission, demonstrated the integration of a hardware-implemented deep photonic reservoir computer with feedforward UAV control for compensating unmodeled dynamics in confined environments. Their CFD-validated results show the deep PRC matches or exceeds MLP and TCN baselines at residual-force prediction while reducing training time from hours to milliseconds and inference latency to nanoseconds. They explicitly note that hardware-in-the-loop online training and transfer to flight platforms are next steps. This is, to this author&#x27;s knowledge, the first published integration of hardware PRC with flight control.</p>
+<p>Williams, Kutz, and Manohar (University of Washington, October 2024, arXiv 2411.05016) demonstrated that echo state networks are particularly suitable surrogate models for model predictive control, providing the algorithmic foundation for the architectural proposal of this brief.</p>
+<p>Yan et al. (March 2026) formalized the Predictive Safety-Stability Filter (PS2F) architecture used as the certification-amenable framework in this brief.</p>
+<p>Aadhi et al. (2026, Nature Communications) demonstrated scalable photonic reservoir computing achieving 20 TOPS at 4.4 fJ per operation on a NALM-based reconfigurable platform.</p>
+<p>Wang et al. (December 2024, Nature Communications, vol. 15, art. 10841) demonstrated 200 TOPS-class silicon photonic RC with NG-RC architecture, from The Chinese University of Hong Kong.</p>
+<p>Indian work, primarily through DRDO&#x27;s Electronics and Radar Development Establishment, has focused on photonic radar for hypersonic <em>detection</em> rather than <em>control</em> — the photonic radar unveiled in June 2025 and entering trials by October 2025 is intended for stealth and hypersonic threat detection, not vehicle GNC. Adjacent neuromorphic photonics work at IIT Delhi (Jolly Xavier group) covers photonic reservoir architectures generically.</p>
+<p>Russian work in reservoir computing, primarily at the Gaponov-Grekhov Institute of Applied Physics (Russian Academy of Sciences) and at Baltic Federal University, has focused on neural signal processing and dynamical-system reconstruction rather than aerospace control applications. A thorough survey of Russian-language hypersonic GNC literature has not been undertaken for this draft and is acknowledged as a gap; the central argument of the brief does not depend on a complete international survey, but a researcher pursuing this program should commission one.</p>
+<p>The implication: photonic reservoir computing for flight control is no longer a speculative category; it is an active research front with multiple groups and substrates, and demonstrated proof-of-concept on adjacent applications. The specific contribution of this brief is to argue for the extension of this approach to hypersonic GNC, addressing the additional thermal, environmental, certification, and supply-chain constraints that hypersonic application imposes beyond what the UAV-focused or general-purpose published work has needed to address.</p>
+</section>
+<section id="9-trl-assessment-and-demonstration-pathway">
+<h2><span class="toc-num">9.</span> TRL Assessment and Demonstration Pathway</h2>
+<p>The state of the technology stack proposed in this brief, as of early 2026, supports the following TRL claims:</p>
+<p><strong>TRL 5–6:</strong> Classical MPC for hypersonic flight control. Mature literature, multiple demonstrated architectures, established theoretical foundation. Used in engineering practice.</p>
+<p><strong>TRL 4–5:</strong> Photonic reservoir computing for general signal processing and time-series prediction. Multiple silicon photonic and time-delay photonic implementations demonstrated in laboratory at GHz throughput.</p>
+<p><strong>TRL 4:</strong> Reservoir computing as MPC surrogate model. Demonstrated in simulation on benchmark control systems (Williams et al. 2024); not yet demonstrated in photonic implementation specifically.</p>
+<p><strong>TRL 3:</strong> Photonic reservoir computing integrated with flight control. First published demonstration on UAV in CFD simulation (Ma et al. 2026); not yet flight-validated; not yet hypersonic.</p>
+<p><strong>TRL 2:</strong> PS2F-architected photonic RC + classical MPC for hypersonic GNC. Theoretical concept formulated; no published integration.</p>
+<p><strong>TRL 1–2:</strong> Wide-bandgap substrate photonic RC for hypersonic environment. Theoretical and small-scale work on diamond, SiC, and sapphire photonic devices; no integrated reservoir computing demonstrations on these substrates qualified for hypersonic conditions.</p>
+<p>A credible TRL advancement pathway:</p>
+<div class="table-wrap"><table>
+<thead><tr>
+<th>Milestone</th>
+<th>Demonstration</th>
+<th>Approximate Timeline</th>
+</tr></thead><tbody>
+<tr>
+<td>M1</td>
+<td>Photonic RC as MPC surrogate on benchmark hypersonic-relevant chaotic dynamics (KS, Lorenz-96), simulation only</td>
+<td>12–18 months</td>
+</tr>
+<tr>
+<td>M2</td>
+<td>PS2F architecture with photonic RC surrogate, simulated closed-loop control of hypersonic-vehicle dynamics model</td>
+<td>18–30 months</td>
+</tr>
+<tr>
+<td>M3</td>
+<td>Hardware photonic RC + classical MPC on benchtop dynamics testbed with representative sensor signals</td>
+<td>30–48 months</td>
+</tr>
+<tr>
+<td>M4</td>
+<td>Wide-bandgap substrate photonic RC qualified per MIL-STD-883/MIL-STD-1629A for relevant thermal/EMI environment</td>
+<td>48–72 months</td>
+</tr>
+<tr>
+<td>M5</td>
+<td>Subsystem demonstration on representative airframe in relevant flight regime (sounding rocket or hypersonic test vehicle)</td>
+<td>72–96 months</td>
+</tr>
+<tr>
+<td>M6</td>
+<td>Integrated flight demonstration</td>
+<td>96+ months</td>
+</tr>
+</tbody></table></div>
+<p>These timelines assume sustained funding and are offered as targets rather than predictions. They are aggressive for novel photonic substrate development; they may be conservative for the algorithmic and architectural milestones (M1, M2) where the underlying frameworks already exist.</p>
+</section>
+<section id="10-key-open-research-questions">
+<h2><span class="toc-num">10.</span> Key Open Research Questions</h2>
+<p>A research program advancing this proposal would address a set of concrete questions, each falsifiable and answerable within the milestone structure proposed above:</p>
+<p>What is the minimum photonic reservoir complexity — node count, topology, nonlinearity strength — required to achieve sufficient surrogate accuracy for inner-loop hypersonic MPC? The answer determines whether the proposal is satisfied by simple time-delay architectures or requires the more elaborate spatial designs.</p>
+<p>How does thermal cycling across the launch-to-cruise envelope affect a candidate reservoir&#x27;s Lyapunov spectrum, memory capacity, and effective kernel rank? This is the property that directly determines whether wide-bandgap substrate selection translates into operationally robust performance or only into device survival without functional advantage.</p>
+<p>Can the readout layer be adapted in flight using only onboard sensors as supervisory signals — for example, by using sensors not in the PRC input vector to construct a held-out reference signal — without requiring external ground truth? This determines whether the architecture can compensate for slow vehicle-specific drift (mass distribution, ablation, sensor drift) or must rely entirely on pre-flight training.</p>
+<p>How should test signals for continuous health monitoring be structured to provide reliable detection of reservoir transfer-characteristic drift without contaminating the control output? The orthogonal-band approach proposed in Section 4 is one candidate; cross-correlation thresholds, integration windows, and false-positive rates require empirical characterization.</p>
+<p>How does the PS2F&#x27;s safety envelope shrink — in terms of achievable performance and trajectory aggressiveness — when the PRC surrogate is inaccurate compared to when the PRC is disabled and the system reverts to a classical analytical surrogate? This is the operational trade study that would justify or refute the value of the PRC contribution beyond the safety margin.</p>
+<p>What end-to-end latency budgets are achievable for hybrid optical-electronic readout architectures qualified for hypersonic environments, and at what latency does the PRC&#x27;s surrogate-evaluation advantage stop translating to operational MPC tractability? This determines the floor below which photonic implementation no longer offers application-relevant benefit over an FPGA-accelerated electronic ESN.</p>
+<p>Each of these questions is answerable through specific simulation or hardware experiments at the milestone scales identified above. They are offered as the program&#x27;s intellectual structure, not as predictions of how the answers will turn out.</p>
+</section>
+<section id="11-what-this-brief-argues-and-does-not-argue">
+<h2><span class="toc-num">11.</span> What This Brief Argues and Does Not Argue</h2>
+<p><strong>This brief argues:</strong></p>
+<p>That photonic reservoir computing, embedded as a fast surrogate dynamical model within a Predictive Safety-Stability Filter architecture, is a credible candidate computational primitive for hypersonic guidance, navigation, and control inner-loop functions.</p>
+<p>That the substrate-level properties of photonic computing — native compatibility with optical sensor signals, EMI immunity, thermal robustness on wide-bandgap substrates, and energy efficiency at GHz throughput — align with specific constraints of the hypersonic environment in ways that complement, not replace, classical electronic GNC computing.</p>
+<p>That the PS2F architectural framework provides a path to certification-amenable integration: classical MPC retains stability and safety authority, PRC contributes performance within enforced bounds, system degrades gracefully to classical operation under PRC failure or off-distribution conditions.</p>
+<p>That this proposition deserves a focused research investment to advance it from current TRL 2 toward TRL 4 within 36 months, with clear falsification criteria at each milestone.</p>
+<p><strong>This brief does not argue:</strong></p>
+<p>That photonic RC should replace classical flight computers or serve as primary flight authority. The proposed role is restricted authority within a partitioned architecture.</p>
+<p>That any specific photonic RC device, including the Betsy architecture, is the right or only instantiation. The argument is for the class, with multiple substrate paths warranting parallel investigation.</p>
+<p>That the technology is ready for near-term deployment. The realistic horizon for flight-relevant demonstration is the 5–10 year range, with deployment beyond that.</p>
+<p>That photonic RC offers throughput advantages over digital electronic computation in absolute terms. The argument is about substrate properties matching application constraints, not about TOPS-per-watt benchmarks.</p>
+<p>That the certification problem is solved. Significant engineering work remains to qualify any ML component for aerospace use, photonic or otherwise. The PS2F framework provides a credible path; it does not eliminate the work.</p>
+</section>
+<section id="12-recommendation">
+<h2><span class="toc-num">12.</span> Recommendation</h2>
+<p>Photonic reservoir computing for hypersonic GNC, embedded within PS2F-architected hybrid control, deserves a small focused research program — sized at perhaps the level of a small DARPA-style seedling effort, an AFRL STTR or program element, or a sustained university-led research initiative — aimed at advancing one or two candidate architectures from TRL 2 to TRL 4 within 36 months. The cost is small relative to the potential capability advantage. The technical risk is bounded by clear falsification criteria at each milestone. The international research landscape suggests this work will proceed somewhere; the question is where, with what substrates, and within what certification frameworks.</p>
+<p>This brief is offered as a contribution to that conversation, from an independent researcher with no institutional affiliation, in the hope that it is useful to those with the capacity to act on it.</p>
+</section>
+<section id="acknowledgments">
+<h2>Acknowledgments</h2>
+<p>This brief was developed using iterated multi-AI adversarial review as a working method. The v1 draft received convergent critique from Perplexity, GPT, and Gemini that substantially reshaped the architectural framing — the decision to position photonic RC as an MPC surrogate within the PS2F framework, rather than as a flight controller alternative, derives directly from that review process. The v2 draft received a structural review from DeepSeek that contributed the quantified latency analysis, the orthogonal-test-signal failure detection method, the training-pipeline specifics, the readout-bottleneck framing, the comparison to non-photonic alternatives, and the open-research-questions section that appear in v3. The v3 draft was tightened in v4 with a self-administered red-team pass.</p>
+<p>This method is being used in lieu of conventional peer review because the work is unsponsored, conducted independently outside institutional affiliation, and not yet at a stage suitable for journal submission. AI-assisted adversarial review is offered here as a partial — not equivalent — substitute for human domain expert review. A reader evaluating the brief should weigh this provenance accordingly.</p>
+<p>The international research landscape section reflects the surfacing of recent Chinese work (Ma et al. 2026) that occurred during the drafting period and that materially changed the argument from &quot;this should be done&quot; to &quot;this is being done; here is the hypersonic-specific extension.&quot;</p>
+<p>Critique and correction from human domain experts are explicitly welcomed.</p>
+</section>
+<section id="references">
+<h2>References</h2>
+<p><em>All primary citations below have been verified by direct retrieval from arXiv, Nature, and journal sources during draft preparation. Items marked [unverified specifics] indicate where the work is real and verifiable but full bibliographic detail (specific authors of multi-author papers, page numbers) was not exhaustively confirmed and should be checked against the cited source before publication.</em></p>
+<p><strong>Photonic reservoir computing — primary sources:</strong></p>
+<p>Aadhi, A., Di Lauro, L., Fischer, B. et al. (incl. Morandotti, R.). &quot;Scalable photonic reservoir computing for parallel machine learning tasks.&quot; <em>Nature Communications</em> 17, 1225 (2026).</p>
+<p>Vandoorne, K., Mechet, P., Van Vaerenbergh, T., Fiers, M., Morthier, G., Verstraeten, D., Schrauwen, B., Dambre, J., Bienstman, P. &quot;Experimental demonstration of reservoir computing on a silicon photonics chip.&quot; <em>Nature Communications</em> 5, 3541 (2014). DOI: <a href="https://doi.org/10.1038/ncomms4541" target="_blank" rel="noopener">10.1038/ncomms4541</a>.</p>
+<p>Wang, D., Nie, Y., Hu, G., Tsang, H. K., Huang, C. &quot;Ultrafast silicon photonic reservoir computing engine delivering over 200 TOPS.&quot; <em>Nature Communications</em> 15, 10841 (2024). DOI: <a href="https://doi.org/10.1038/s41467-024-55172-3" target="_blank" rel="noopener">10.1038/s41467-024-55172-3</a>. The Chinese University of Hong Kong.</p>
+<p><strong>Photonic RC integrated with flight control:</strong></p>
+<p>Ma, Q., Li, R., Wang, C., Wang, Y. &quot;Deep Photonic Reservoir Computer Meets UAV Control: An ultra-fast learning-based compensator for agile flight in confined space.&quot; <a href="https://arxiv.org/abs/2604.10262" target="_blank" rel="noopener">arXiv:2604.10262</a> [physics.optics] (submitted 11 April 2026). Funded by NSFC and Shanghai Municipal Science and Technology Commission.</p>
+<p><strong>Reservoir computing as MPC surrogate / control framework:</strong></p>
+<p>Williams, J. P., Kutz, J. N., Manohar, K. &quot;Reservoir computing for system identification and predictive control with limited data.&quot; <a href="https://arxiv.org/abs/2411.05016" target="_blank" rel="noopener">arXiv:2411.05016</a> (submitted 23 October 2024). University of Washington.</p>
+<p>Yan, Y., Tao, C., Su, J., Liu, C., Li, S. &quot;MPC as a Copilot: A Predictive Filter Framework with Safety and Stability Guarantees.&quot; <a href="https://arxiv.org/abs/2603.27893" target="_blank" rel="noopener">arXiv:2603.27893</a> (submitted 29 March 2026). University College London / Southeast University / Loughborough University.</p>
+<p><strong>Reservoir computing stability and echo state property:</strong></p>
+<p>Yildiz, I. B., Jaeger, H., Kiebel, S. J. &quot;Re-visiting the echo state property.&quot; <em>Neural Networks</em> 35, 1–9 (2012). DOI: <a href="https://doi.org/10.1016/j.neunet.2012.07.005" target="_blank" rel="noopener">10.1016/j.neunet.2012.07.005</a>.</p>
+<p>Wainrib, G., Galtier, M. N. &quot;A local echo state property through the largest Lyapunov exponent.&quot; <em>Neural Networks</em> 76, 39–45 (2016). DOI: <a href="https://doi.org/10.1016/j.neunet.2015.12.013" target="_blank" rel="noopener">10.1016/j.neunet.2015.12.013</a>.</p>
+<p>Gallicchio, C., Micheli, A. &quot;Echo State Property of Deep Reservoir Computing Networks.&quot; <em>Cognitive Computation</em> 9, 337–350 (2017). DOI: <a href="https://doi.org/10.1007/s12559-017-9461-9" target="_blank" rel="noopener">10.1007/s12559-017-9461-9</a>.</p>
+<p>Jaeger, H. &quot;The &#x27;echo state&#x27; approach to analysing and training recurrent neural networks.&quot; GMD Report 148 (2001), with erratum note 2010. German National Research Institute for Computer Science.</p>
+<p><strong>Aerospace ML certification context [unverified specifics]:</strong></p>
+<p>Industry and regulatory literature on certification of ML components in safety-critical avionics: DO-178C (software), DO-254 (hardware), EASA W-shape model for AI assurance, SAE/EUROCAE WG-114 working-group outputs, MIL-STD-883 (qualification), MIL-STD-1629A (FMEA), NASA EEE-INST-002, ECSS-Q-ST-60C. Daedalean/Intel (2023) reference architecture for certifiable embedded electronics. Specific citations to be added.</p>
+<p><strong>Hypersonic GNC literature [unverified specifics]:</strong></p>
+<p>ScienceDirect article on disturbance observer-based backstepping control for hypersonic flight vehicles avoiding measured flight path angle (2020), Chinese aerospace authors. DLR generic hypersonic glide vehicle work in <em>CEAS Space Journal</em> (2024). Wang et al. (2019), &quot;Robust Neural Direct Hypersonic Flight Control Under Actuator Saturation,&quot; in <em>Cognitive Systems and Signal Processing</em> (Springer Lecture Notes ICCSIP 2018), DOI: 10.1007/978-981-13-7986-4_36. Specific full citations to be completed.</p>
+<p><strong>International research context [verified at the level of existence; specifics to confirm]:</strong></p>
+<p>DRDO photonic radar (India), unveiled June 2025, in trials October 2025, public reporting via DRDO and Indian defense press.</p>
+<p>Hramov group (Russian Academy of Sciences, Gaponov-Grekhov Institute of Applied Physics, Nizhny Novgorod; and Baltic Federal University, Kaliningrad), reservoir computing for neural signal processing, <em>Chaos</em> and adjacent journals.</p>
+<p>Indian neuromorphic photonics work, Jolly Xavier group (MiD-Q-MiNT lab, IIT Delhi), reviewed in <em>Chips</em> (MDPI), volume 4, issue 3 (2025).</p>
+<p><strong>Verification note:</strong> Before public release, every reference above marked [unverified specifics] should be retrieved directly from its source and confirmed. Primary citations (the verified group above) were checked by direct retrieval during drafting; that check should be re-run before commit to confirm no withdrawals or version changes have occurred since.</p>
+<p><em>This brief is shared under a Creative Commons Attribution 4.0 license. Comments and technical critique welcomed.</em> <em>Contact: [Solbakken Research Initiative public channels — bluebflatminor on GitHub]</em></p>
+</section>
+
+<footer class="footer">
+<p>This work is licensed under <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener">CC BY 4.0</a>.</p>
+<p>Source repository: <a href="https://github.com/bluebflatminor/photonic-rc-hypersonic-gnc" target="_blank" rel="noopener">github.com/bluebflatminor/photonic-rc-hypersonic-gnc</a></p>
+<p>Critique and correction from human domain experts welcomed via repository issues or pull requests.</p>
+</footer>
+</main>
+</div>
+
+<script>
+// Highlight current TOC item on scroll
+const sections = document.querySelectorAll('section');
+const tocLinks = document.querySelectorAll('.toc-list a');
+
+function setActiveTocItem() {
+    let currentSection = '';
+    const offset = 100;
+    sections.forEach(section => {
+        const rect = section.getBoundingClientRect();
+        if (rect.top < offset && rect.bottom > offset) {
+            currentSection = section.id;
+        }
+    });
+    if (!currentSection && sections.length > 0) {
+        // If no section is in view, use the first visible one
+        for (const section of sections) {
+            const rect = section.getBoundingClientRect();
+            if (rect.bottom > 0) {
+                currentSection = section.id;
+                break;
+            }
+        }
+    }
+    tocLinks.forEach(link => {
+        const sectionId = link.getAttribute('data-section');
+        if (sectionId === currentSection) {
+            link.classList.add('active');
+        } else {
+            link.classList.remove('active');
+        }
+    });
+}
+
+window.addEventListener('scroll', setActiveTocItem, { passive: true });
+window.addEventListener('load', setActiveTocItem);
+</script>
+</body>
+</html>
